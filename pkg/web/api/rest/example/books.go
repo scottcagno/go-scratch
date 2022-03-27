@@ -29,7 +29,7 @@ func (b Books) searchByID(id string) int {
 	if !sort.IsSorted(b) {
 		sort.Stable(b)
 	}
-	return sort.Search(len(b), func(i int) bool { return b[i].ID == id })
+	return sort.Search(len(b), func(i int) bool { return b[i].ID >= id })
 }
 
 func (b Books) searchByTitle(title string) int {

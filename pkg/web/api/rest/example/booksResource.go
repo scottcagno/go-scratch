@@ -16,6 +16,10 @@ var DefaultBookResource = &BooksResource{
 	books: make([]Book, 0),
 }
 
+func (b *BooksResource) AppendBook(book Book) {
+	b.books = append(b.books, book)
+}
+
 func (b *BooksResource) GetAll() http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		// return all books
