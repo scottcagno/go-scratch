@@ -12,6 +12,10 @@ type BooksResource struct {
 	books Books
 }
 
+var DefaultBookResource = &BooksResource{
+	books: make([]Book, 0),
+}
+
 func (b *BooksResource) GetAll() http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		// return all books

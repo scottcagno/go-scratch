@@ -12,10 +12,12 @@ type RESTApiServer struct {
 
 // NewAPIServer creates and returns a new server instance
 func NewAPIServer(base string) *RESTApiServer {
-	return &RESTApiServer{
+	srv := &RESTApiServer{
 		base: clean(base),
 		h:    http.NewServeMux(),
 	}
+	srv.h.Handle("/", http.RedirectHandler(srv.base, http.StatusSeeOther))
+	return srv
 }
 
 func (srv *RESTApiServer) RegisterResourceHandler(name string, re ResourceHandler) {
