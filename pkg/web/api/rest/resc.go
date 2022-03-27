@@ -1,43 +1,65 @@
 package rest
 
 import (
-	"encoding/json"
-	"encoding/xml"
 	"net/http"
+	"path"
 )
-
-type ResourceHandler interface {
-	ReturnAll(w http.ResponseWriter, r *http.Request)
-	ReturnOne(w http.ResponseWriter, r *http.Request)
-	InsertOne(w http.ResponseWriter, r *http.Request)
-	UpdateOne(w http.ResponseWriter, r *http.Request)
-	DeleteOne(w http.ResponseWriter, r *http.Request)
-}
 
 type Resource interface {
 	GetAll() http.Handler
 	Get(id string) http.Handler
-	Add() http.Handler
-	Set(id string) http.Handler
+	Add(req *http.Request) http.Handler
+	Set(req *http.Request, id string) http.Handler
 	Del(id string) http.Handler
 }
 
-func WriteAsJSON(w http.ResponseWriter, data interface{}) {
-	w.WriteHeader(200)
-	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
-		return
-	}
-	return
+// resource is an internal representation wrapping a user supplied ResourceHandler
+type resource struct {
+	name string
+	path string
+	Resource
 }
 
-func WriteAsXML(w http.ResponseWriter, data interface{}) {
-	w.WriteHeader(200)
-	w.Header().Set("content-type", "application/xml")
-	if err := xml.NewEncoder(w).Encode(data); err != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
-		return
+// checkID returns a boolean reporting true if a resource id can be identified
+func (re *resource) checkID(uri string) bool {
+	if len(uri) > 0 && uri[len(uri)-1] == '/' {
+		uri = uri[:len(uri)-1]
 	}
-	return
+	i := len(uri) - 1
+	for i >= 0 && uri[i] != '/' {
+		i--
+	}
+	return uri[i+1:] != "" && uri[i+1:] != re.name
+}
+
+func (re *resource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var h http.Handler
+	hasID := re.checkID(r.RequestURI)
+	var id string
+	if hasID {
+		id = path.Base(r.RequestURI)
+	}
+	switch r.Method {
+	case http.MethodGet:
+		if hasID {
+			h = re.Get(id)
+			return
+		}
+		h = re.GetAll()
+		return
+	case http.MethodPost:
+		h = re.Add(r)
+		return
+	case http.MethodPut:
+		if hasID {
+			h = re.Set(r, id)
+			return
+		}
+	case http.MethodDelete:
+		if hasID {
+			h = re.Del(id)
+			return
+		}
+	}
+	h.ServeHTTP(w, r)
 }

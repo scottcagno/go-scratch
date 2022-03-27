@@ -1,12 +1,7 @@
 package example
 
 import (
-	"fmt"
-	"net/http"
-	"path"
 	"sort"
-
-	"github.com/scottcagno/go-scratch/pkg/web/api/rest"
 )
 
 type Book struct {
@@ -60,81 +55,4 @@ func delBookByID(b *Books, id string) {
 	}
 	(*b)[len(*b)-1] = Book{} // or the zero value of T
 	*b = (*b)[:len(*b)-1]
-}
-
-type BooksHandler struct {
-	books []Book
-}
-
-func (b *BooksHandler) ReturnAll(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "%q, return all (%q)\n", b, r.RequestURI)
-}
-
-func (b *BooksHandler) ReturnOne(w http.ResponseWriter, r *http.Request) {
-	id := path.Base(r.RequestURI)
-	fmt.Fprintf(w, "%q, return one (%q), id=%v\n", b, r.RequestURI, id)
-}
-
-func (b *BooksHandler) InsertOne(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "%q, insert one\n", b)
-}
-
-func (b *BooksHandler) UpdateOne(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "%q, update one\n", b)
-}
-
-func (b *BooksHandler) DeleteOne(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "%q, delete one\n", b)
-}
-
-func (b *BooksHandler) String() string {
-	return "BooksHandler"
-}
-
-type BooksResource struct {
-	books Books
-}
-
-func (b *BooksResource) GetAll() http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		// return all books
-		rest.WriteAsJSON(w, b.books)
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (b *BooksResource) Get(id string) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		// search book by id
-		i := b.books.searchByID(id)
-		// return book
-		rest.WriteAsJSON(w, b.books[i])
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (b *BooksResource) Add() http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		// implement
-		rest.WriteAsJSON(w, struct{ Msg string }{"Implement me..."})
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (b *BooksResource) Set(id string) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		// implement
-		rest.WriteAsJSON(w, struct{ Msg string }{"Implement me..."})
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (b *BooksResource) Del(id string) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		// delete book
-		delBookByID(&b.books, id)
-		// return books
-		rest.WriteAsJSON(w, b.books)
-	}
-	return http.HandlerFunc(fn)
 }
