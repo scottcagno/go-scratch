@@ -13,7 +13,7 @@ import (
 var books *example.BooksResource
 
 func init() {
-	books := example.DefaultBookResource
+	books = example.DefaultBookResource
 	for i := 0; i < 15; i++ {
 		books.AppendBook(
 			example.Book{

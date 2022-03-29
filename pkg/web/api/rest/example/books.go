@@ -25,11 +25,16 @@ func (b Books) Less(i, j int) bool {
 	return b[i].ID < b[j].ID
 }
 
-func (b Books) searchByID(id string) int {
+func (b Books) searchByID(id string) (int, bool) {
 	if !sort.IsSorted(b) {
 		sort.Stable(b)
 	}
-	return sort.Search(len(b), func(i int) bool { return b[i].ID >= id })
+	i := sort.Search(
+		len(b), func(i int) bool {
+			return b[i].ID >= id
+		},
+	)
+	return i, i > 0 && i < len(b)
 }
 
 func (b Books) searchByTitle(title string) int {
@@ -48,7 +53,10 @@ func (b Books) searchByAuthor(author string) int {
 
 func delBookByID(b *Books, id string) {
 	// find book
-	i := b.searchByID(id)
+	i, found := b.searchByID(id)
+	if !found {
+		return
+	}
 	// delete from slice (GC)
 	if i < len(*b)-1 {
 		copy((*b)[i:], (*b)[i+1:])

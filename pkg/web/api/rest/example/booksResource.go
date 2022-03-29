@@ -9,30 +9,33 @@ import (
 )
 
 type BooksResource struct {
-	books Books
+	Books
 }
 
 var DefaultBookResource = &BooksResource{
-	books: make([]Book, 0),
+	Books: make([]Book, 0),
 }
 
 func (b *BooksResource) AppendBook(book Book) {
-	b.books = append(b.books, book)
+	b.Books = append(b.Books, book)
 }
 
 func (b *BooksResource) GetAll() http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		// return all books
-		rest.WriteAsJSON(w, b.books)
+		rest.WriteAsJSON(w, b.Books)
 	}
 	return http.HandlerFunc(fn)
 }
 
 func (b *BooksResource) Get(id string) http.Handler {
 	// search book by id
-	i := b.books.searchByID(id)
+	i, found := b.Books.searchByID(id)
+	if !found {
+		return http.NotFoundHandler()
+	}
 	// isolate book
-	book := b.books[i]
+	book := b.Books[i]
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		// return book
 		rest.WriteAsJSON(w, book)
@@ -46,9 +49,9 @@ func (b *BooksResource) Add(req *http.Request) http.Handler {
 	err := json.NewDecoder(req.Body).Decode(&book)
 	// add book to set if no error
 	if err == nil {
-		b.books = append(b.books, book)
+		b.Books = append(b.Books, book)
 		// sort
-		sort.Stable(b.books)
+		sort.Stable(b.Books)
 	}
 	// now we can start handing...
 	fn := func(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +61,7 @@ func (b *BooksResource) Add(req *http.Request) http.Handler {
 			return
 		}
 		// return books
-		rest.WriteAsJSON(w, b.books)
+		rest.WriteAsJSON(w, b.Books)
 	}
 	return http.HandlerFunc(fn)
 }
@@ -70,11 +73,11 @@ func (b *BooksResource) Set(req *http.Request, id string) http.Handler {
 	// if no error
 	if err == nil {
 		// delete "old" book (for "update")
-		delBookByID(&b.books, id)
+		delBookByID(&b.Books, id)
 		// and add new book (to complete "update")
-		b.books = append(b.books, book)
+		b.Books = append(b.Books, book)
 		// sort
-		sort.Stable(b.books)
+		sort.Stable(b.Books)
 	}
 	// now we can start handling...
 	fn := func(w http.ResponseWriter, r *http.Request) {
@@ -84,18 +87,18 @@ func (b *BooksResource) Set(req *http.Request, id string) http.Handler {
 			return
 		}
 		// return books
-		rest.WriteAsJSON(w, b.books)
+		rest.WriteAsJSON(w, b.Books)
 	}
 	return http.HandlerFunc(fn)
 }
 
 func (b *BooksResource) Del(id string) http.Handler {
 	// delete book
-	delBookByID(&b.books, id)
+	delBookByID(&b.Books, id)
 	// now we can start handling...
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		// return books
-		rest.WriteAsJSON(w, b.books)
+		rest.WriteAsJSON(w, b.Books)
 	}
 	return http.HandlerFunc(fn)
 }

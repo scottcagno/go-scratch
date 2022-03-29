@@ -44,36 +44,40 @@ func (re *resource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if hasID {
 		id = path.Base(r.RequestURI)
 	}
-	switch r.Method {
-	case http.MethodGet:
-		if hasID {
+	if hasID {
+		switch r.Method {
+		case http.MethodGet:
 			LogRequest(r, "get one")
 			h = re.Get(id)
-			h.ServeHTTP(w, r)
-			return
+			goto serve
+		case http.MethodPut:
+			LogRequest(r, "update one")
+			h = re.Set(r, id)
+			goto serve
+		case http.MethodDelete:
+			LogRequest(r, "delete one")
+			h = re.Del(id)
+			goto serve
+		default:
+			LogRequest(r, "bad request with id")
+			h = http.NotFoundHandler()
+			goto serve
 		}
+	}
+	switch r.Method {
+	case http.MethodGet:
 		LogRequest(r, "get all")
 		h = re.GetAll()
-		h.ServeHTTP(w, r)
-		return
+		goto serve
 	case http.MethodPost:
 		LogRequest(r, "add one")
 		h = re.Add(r)
-		h.ServeHTTP(w, r)
-		return
-	case http.MethodPut:
-		if hasID {
-			LogRequest(r, "update one")
-			h = re.Set(r, id)
-			h.ServeHTTP(w, r)
-			return
-		}
-	case http.MethodDelete:
-		if hasID {
-			LogRequest(r, "delete one")
-			h = re.Del(id)
-			h.ServeHTTP(w, r)
-			return
-		}
+		goto serve
+	default:
+		LogRequest(r, "bad request")
+		h = http.NotFoundHandler()
+		goto serve
 	}
+serve:
+	h.ServeHTTP(w, r)
 }
