@@ -8,7 +8,8 @@ import (
 
 type Resource interface {
 
-	// GetAll returns all the implementing resource items.
+	// GetAll returns a http.Handler that locates and returns all
+	// the implementing resource items.
 	GetAll() http.Handler
 
 	// GetOne takes an identifier and returns a http.Handler that

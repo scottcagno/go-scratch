@@ -5,11 +5,32 @@ import (
 )
 
 type ResourceHandler interface {
-	ReturnAll(w http.ResponseWriter, r *http.Request)
-	ReturnOne(w http.ResponseWriter, r *http.Request)
-	InsertOne(w http.ResponseWriter, r *http.Request)
-	UpdateOne(w http.ResponseWriter, r *http.Request)
-	DeleteOne(w http.ResponseWriter, r *http.Request)
+
+	// GetAll implements http.Handler and is responsible for locating
+	// and returns all the implementing resource items.
+	GetAll(w http.ResponseWriter, r *http.Request)
+
+	// GetOne implements http.Handler and is responsible for locating
+	// and returning the resource item with the matching identifier.
+	// Note: the user is responsible for obtaining the identifier from
+	// the request.
+	GetOne(w http.ResponseWriter, r *http.Request)
+
+	// AddOne implements http.Handler and is responsible for locating
+	// the provided serialized resource item (written to the request
+	// body) and adding the serialized item to the resource set.
+	AddOne(w http.ResponseWriter, r *http.Request)
+
+	// SetOne implements http.Handler and is responsible for locating
+	// an identifier along with a serialized resource item (written to
+	// the request body) and updating the resource item that has a
+	// matching identifier.
+	SetOne(w http.ResponseWriter, r *http.Request)
+
+	// DelOne implements http.Handler and is responsible for locating
+	// an identifier and deleting the resource item with the matching
+	// identifier.
+	DelOne(w http.ResponseWriter, r *http.Request)
 }
 
 // resourceHandler is an internal representation wrapping a user supplied ResourceHandler
@@ -36,22 +57,22 @@ func (rh *resourceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		if hasID {
-			rh.re.ReturnOne(w, r)
+			rh.re.GetOne(w, r)
 			return
 		}
-		rh.re.ReturnAll(w, r)
+		rh.re.GetAll(w, r)
 		return
 	case http.MethodPost:
-		rh.re.InsertOne(w, r)
+		rh.re.AddOne(w, r)
 		return
 	case http.MethodPut:
 		if hasID {
-			rh.re.UpdateOne(w, r)
+			rh.re.SetOne(w, r)
 			return
 		}
 	case http.MethodDelete:
 		if hasID {
-			rh.re.DeleteOne(w, r)
+			rh.re.DelOne(w, r)
 			return
 		}
 	}
