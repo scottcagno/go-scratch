@@ -28,7 +28,7 @@ func (b *BooksResource) GetAll() http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (b *BooksResource) Get(id string) http.Handler {
+func (b *BooksResource) GetOne(id string) http.Handler {
 	// search book by id
 	i, found := b.Books.searchByID(id)
 	if !found {

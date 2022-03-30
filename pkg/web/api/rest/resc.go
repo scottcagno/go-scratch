@@ -7,11 +7,30 @@ import (
 )
 
 type Resource interface {
+
+	// GetAll returns all the implementing resource items.
 	GetAll() http.Handler
-	Get(id string) http.Handler
-	Add(req *http.Request) http.Handler
-	Set(req *http.Request, id string) http.Handler
-	Del(id string) http.Handler
+
+	// GetOne takes an identifier and returns a http.Handler that
+	// locates and returns the resource item with the matching
+	// identifier.
+	GetOne(id string) http.Handler
+
+	// AddOne takes a serialized resource item (written to the request
+	// body) and returns a http.Handler that adds the serialized item
+	// to the resource set.
+	AddOne(r *http.Request) http.Handler
+
+	// SetOne takes an identifier along with a serialized resource
+	// item (written to the request body) and returns a http.Handler
+	// that locates and updates the resource item that has a matching
+	// identifier.
+	SetOne(r *http.Request, id string) http.Handler
+
+	// DelOne takes an identifier and returns a http.Handler that
+	// locates and deletes the resource item with the matching
+	// identifier.
+	DelOne(id string) http.Handler
 }
 
 // resource is an internal representation wrapping a user supplied ResourceHandler
@@ -48,15 +67,15 @@ func (re *resource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			LogRequest(r, "get one")
-			h = re.Get(id)
+			h = re.GetOne(id)
 			goto serve
 		case http.MethodPut:
 			LogRequest(r, "update one")
-			h = re.Set(r, id)
+			h = re.SetOne(r, id)
 			goto serve
 		case http.MethodDelete:
 			LogRequest(r, "delete one")
-			h = re.Del(id)
+			h = re.DelOne(id)
 			goto serve
 		default:
 			LogRequest(r, "bad request with id")
@@ -71,7 +90,7 @@ func (re *resource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		goto serve
 	case http.MethodPost:
 		LogRequest(r, "add one")
-		h = re.Add(r)
+		h = re.AddOne(r)
 		goto serve
 	default:
 		LogRequest(r, "bad request")
