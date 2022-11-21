@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+// v1: https://go.dev/play/p/nKtSKjKxK_o
+// v2: https://go.dev/play/p/1ottKCJOUKQ
+
 var myBgFunc = func(t time.Time) error {
 	fmt.Printf("running my background func: %ds (elapsed)\n", t.Second())
 	if t.Second() > 10 {
