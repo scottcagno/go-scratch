@@ -31,7 +31,7 @@ type rbNode struct {
 	entry  RBEntry
 }
 
-type Tree = rbTree
+type RBTREE = rbTree
 
 // rbTree is a struct representing a rbTree
 type rbTree struct {

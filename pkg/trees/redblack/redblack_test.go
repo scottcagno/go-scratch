@@ -22,6 +22,13 @@ func (e entry) String() string {
 	return fmt.Sprintf("entry.data=%q", e.data)
 }
 
+func TestNIL(t *testing.T) {
+	tree := NewTree()
+	if tree.NIL != nil {
+		t.Logf("tree.NIL==%#v\n", tree.NIL)
+	}
+}
+
 func TestRbTree_Scan(t *testing.T) {
 	tree := newRBTree()
 	for i := 0; i < 32; i++ {
