@@ -3,112 +3,96 @@ package polling
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"runtime"
+	"strings"
 	"time"
 )
 
-type PollerFunc func(t time.Time) error
+type PollerFunc func(t time.Time)
+
+func defaultPollerFunc(t time.Time) {
+	fmt.Println("Tick at", t)
+}
 
 type Poller struct {
-	tick         *time.Ticker
-	interval     time.Duration
-	running      bool
-	fn           PollerFunc
-	fnCount      int
-	fnStart      time.Time
-	fnSinceStart time.Duration
-	done         chan bool
+	ticker  *time.Ticker
+	fn      PollerFunc
+	done    chan bool
+	running bool
 }
 
 func NewPoller(d time.Duration, fn PollerFunc) *Poller {
-	return &Poller{
-		tick:     time.NewTicker(d),
-		interval: d,
-		fn:       fn,
+	if fn == nil {
+		fn = defaultPollerFunc
 	}
+	p := &Poller{
+		ticker: time.NewTicker(d),
+		fn:     fn,
+		done:   make(chan bool),
+	}
+	return p
 }
 
-func (bt *Poller) init() chan bool {
-	done := make(chan bool)
+func (p *Poller) Start() {
+	p.startEventLoop()
+	log.Printf("Poller started\n")
+}
+
+func (p *Poller) startEventLoop() {
+	if p.running {
+		return
+	}
+	p.running = true
 	go func() {
-		var err error
 		for {
 			select {
-			case <-done:
-				bt.tick.Stop()
+			case <-p.done:
 				return
-			case t := <-bt.tick.C:
-				err = bt.fn(t)
-				if err != nil {
-					bt.Stop()
-					log.Printf("Encountered an error running function, stopping: %q\n", err)
-					return
-				}
-				bt.fnCount++
-				bt.fnSinceStart = time.Since(bt.fnStart)
+			case t := <-p.ticker.C:
+				p.fn(t)
 			}
 		}
 	}()
-	return done
 }
 
-func (bt *Poller) Start() {
-	log.Printf("Poller started...\n")
-	log.Printf("Running background func every %s\n", bt.interval)
-	if bt.running {
-		return
-	}
-	go func() {
-		var err error
-		for {
-			select {
-			case t := <-bt.tick.C:
-				err = bt.fn(t)
-				if err != nil {
-					bt.Stop()
-					log.Printf("Encountered an error running function, stopping: %q\n", err)
-					return
-				}
-				bt.fnCount++
-				bt.fnSinceStart = time.Since(bt.fnStart)
-			}
-		}
-	}()
-	bt.running = true
-	bt.fnStart = time.Now()
+func (p *Poller) Reset(d time.Duration) {
+	p.resetEventLoop(d)
+	log.Printf("Poller reset to %s intervals\n", d)
 }
 
-func (bt *Poller) Stop() {
+func (p *Poller) resetEventLoop(d time.Duration) {
+	// stop the event loop
+	p.stopEventLoop()
+	// reset the ticker with a new interval
+	p.ticker.Reset(d)
+	// start the event loop again
+	p.startEventLoop()
+}
+
+func (p *Poller) Stop() {
+	p.ticker.Stop()
+	p.stopEventLoop()
 	log.Printf("Poller stopped.\n")
-	if bt.running {
-		bt.running = false
+}
+
+func (p *Poller) stopEventLoop() {
+	if p.running {
+		// kill the existing event loop
+		p.done <- true
+		// make sure running is false
+		p.running = false
 	}
-	bt.done <- true
 }
 
-func (bt *Poller) Reset(d time.Duration) {
-	log.Printf("Poller reset...\n")
-	bt.tick.Reset(d)
-	bt.fnStart = time.Now()
-	if !bt.running {
-		bt.running = true
-		log.Printf("Was stopped. Now running background func every %s\n", d)
-		return
-	} else {
-		before := bt.interval
-		log.Printf("Was running every %s, now running background func every %s\n", before, d)
+func (p *Poller) String() string {
+	return fmt.Sprintf("fn=%q, running=%v\n", GetFuncName(p.fn), p.running)
+}
+
+func GetFuncName(fn any) string {
+	name := runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
+	if n := strings.IndexByte(name, '.'); n > 0 {
+		name = name[n+1:]
 	}
-	bt.interval = d
-}
-
-func (bt *Poller) Destroy() {
-	bt.tick = nil
-	bt.interval = 0
-	bt.running = false
-	bt.fn = nil
-	runtime.GC()
-}
-
-func (bt *Poller) Stats() {
-	fmt.Printf("fn has run %d times since it was started %s ago\n", bt.fnCount, bt.fnSinceStart)
+	return name
 }

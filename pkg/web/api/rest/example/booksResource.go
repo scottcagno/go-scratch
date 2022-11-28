@@ -12,6 +12,21 @@ type BooksResource struct {
 	Books
 }
 
+func (b *BooksResource) AddOne(r *http.Request) http.Handler {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (b *BooksResource) SetOne(r *http.Request, id string) http.Handler {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (b *BooksResource) DelOne(id string) http.Handler {
+	// TODO implement me
+	panic("implement me")
+}
+
 var DefaultBookResource = &BooksResource{
 	Books: make([]Book, 0),
 }
