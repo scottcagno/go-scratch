@@ -96,4 +96,21 @@ func TestTree_Walk_WithPaths(t *testing.T) {
 	// 		return false
 	// 	},
 	// )
+
+	key, _ := makeKey(http.MethodGet, "/v1/posts/12")
+	k, v, ok := tree.FindLongestPrefix(key)
+	fmt.Printf("\nfind(%q): got={%q, %v} found=%v\n", key, k, v, ok)
+}
+
+func TestChiTree_Walk_WithPaths(t *testing.T) {
+	fmt.Println("Populating tree...")
+	tree := new(chiTreeNode)
+	tree.InsertRoute(mGET, "v1", nil)
+	tree.InsertRoute(mGET, "v1/posts", nil)
+	tree.InsertRoute(mGET, "v1/posts/{date}", nil)
+	tree.InsertRoute(mGET, "v1/posts/{date}/comments", nil)
+
+	fmt.Printf("Finding match for %q...\n", "/v1/posts/12")
+	n := tree.findPattern("/v1/posts/12")
+	fmt.Printf("%+v\n", n)
 }
