@@ -107,7 +107,7 @@ func BenchmarkURLPath_Radix_WalkPath(b *testing.B) {
 					return false
 				},
 			)
-			assert(b, "WalkPath", data.RequestURI, key, val, found, data.ShouldMatch)
+			assert(b, "WalkPathBelow", data.RequestURI, key, val, found, data.ShouldMatch)
 		}
 	}
 }
@@ -134,7 +134,7 @@ func BenchmarkURLPath_Radix_WalkPrefix(b *testing.B) {
 					return false
 				},
 			)
-			assert(b, "WalkPrefix", data.RequestURI, key, val, found, data.ShouldMatch)
+			assert(b, "WalkPathAbove", data.RequestURI, key, val, found, data.ShouldMatch)
 		}
 	}
 }
