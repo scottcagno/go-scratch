@@ -2,7 +2,6 @@ package radix
 
 import (
 	"fmt"
-	"path"
 	"sort"
 	"strings"
 )
@@ -422,7 +421,7 @@ func (t *Tree) FindLongestPrefix(k string) (string, any, bool) {
 	search := k
 	for {
 
-		fmt.Printf("k=%q, search=%q, len(search)=%d, n=%s\n", k, search, len(search), n)
+		//	fmt.Printf("k=%q, search=%q, len(search)=%d, n=%s\n", k, search, len(search), n)
 
 		// Look for a leaf node
 		if n.isLeaf() {
@@ -442,23 +441,23 @@ func (t *Tree) FindLongestPrefix(k string) (string, any, bool) {
 
 		// Consume the search prefix
 		if !(len(search) >= len(n.prefix) && search[0:len(n.prefix)] == n.prefix) {
-			fmt.Printf(">> [BREAKING] k=%q, search=%q, len(search)=%d\n", k, search, len(search))
+			//	fmt.Printf(">> [BREAKING] k=%q, search=%q, len(search)=%d\n", k, search, len(search))
 			// inlined version of !strings.HasPrefix(search, n.prefix)
 			break
 		}
 		search = search[len(n.prefix):]
 	}
 	if last != nil {
-		fmt.Printf(
-			">> [LAST] k=%q, search=%q, len(search)=%d, last.key=%q, last.val=%v\n",
-			k, search, len(search), last.key, last.val,
-		)
+		// fmt.Printf(
+		//	">> [LAST] k=%q, search=%q, len(search)=%d, last.key=%q, last.val=%v\n",
+		//	k, search, len(search), last.key, last.val,
+		// )
 
-		joined := path.Join(last.key, search)
-		fmt.Printf(
-			">> [LAST] k=%q, joined=%q, match=%v\n",
-			k, joined, k == joined,
-		)
+		// joined := path.Join(last.key, search)
+		// fmt.Printf(
+		//	">> [LAST] k=%q, joined=%q, match=%v\n",
+		//	k, joined, k == joined,
+		// )
 		return last.key, last.val, true
 	}
 	return "", nil, false

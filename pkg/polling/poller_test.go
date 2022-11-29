@@ -30,7 +30,7 @@ func TestPoller_All(t *testing.T) {
 	time.Sleep(8 * time.Second)
 
 	fmt.Printf(">>> Getting poller stats.\n")
-	b.Stats()
+	fmt.Println(b)
 
 	fmt.Printf(">>> Resetting poller.\n")
 	b.Reset(1 * time.Second)

@@ -9,10 +9,11 @@ import (
 	"time"
 )
 
-type PollerFunc func(t time.Time)
+type PollerFunc func(t time.Time) error
 
-func defaultPollerFunc(t time.Time) {
+func defaultPollerFunc(t time.Time) error {
 	fmt.Println("Tick at", t)
+	return nil
 }
 
 type Poller struct {
@@ -20,6 +21,7 @@ type Poller struct {
 	fn      PollerFunc
 	done    chan bool
 	running bool
+	err     error
 }
 
 func NewPoller(d time.Duration, fn PollerFunc) *Poller {
@@ -40,7 +42,7 @@ func (p *Poller) Start() {
 }
 
 func (p *Poller) startEventLoop() {
-	if p.running {
+	if p.running || p.err != nil {
 		return
 	}
 	p.running = true
@@ -50,7 +52,12 @@ func (p *Poller) startEventLoop() {
 			case <-p.done:
 				return
 			case t := <-p.ticker.C:
-				p.fn(t)
+				p.err = p.fn(t)
+				if p.err != nil {
+					log.Printf("Got an error from %q, stopping.\n", GetFuncName(p.fn))
+					p.Stop()
+					return
+				}
 			}
 		}
 	}()
@@ -77,7 +84,7 @@ func (p *Poller) Stop() {
 }
 
 func (p *Poller) stopEventLoop() {
-	if p.running {
+	if p.running && p.err == nil {
 		// kill the existing event loop
 		p.done <- true
 		// make sure running is false
