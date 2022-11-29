@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cagnosolutions/go-data/pkg/util"
+	"github.com/scottcagno/go-scratch/pkg/util"
 )
 
 var (
@@ -14,7 +14,7 @@ var (
 )
 
 func TestStoreAppendRead(t *testing.T) {
-	f, err := ioutil.TempFile("", "store_append_read_test")
+	f, err := os.CreateTemp("", "store_append_read_test")
 	util.AssertNoError(t, err)
 	defer os.Remove(f.Name())
 
